@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora Penal</title>
+<meta name="description" content="Estime as datas de progressão de regime e de livramento condicional de forma simples.">
+<style>
+  :root {
+    --fundo: #f5f2ec;
+    --papel: #ffffff;
+    --tinta: #1b2333;
+    --suave: #5b6476;
+    --linha: #dcd6cb;
+    --marinho: #13213d;
+    --ouro: #b0843c;
+    --ouro-claro: #f3e9d6;
+    --ok: #2f7d4f;
+    --ok-claro: #e3f2e8;
+    --erro: #b3372b;
+    --erro-claro: #fbe9e6;
+    --zap: #1f9d55;
+    --raio: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--fundo); color: var(--tinta);
+    font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .topo { background: var(--marinho); color: #fff; }
+  .topo .faixa { max-width: 860px; margin: 0 auto; padding: 36px 16px 30px; }
+  .topo h1 {
+    margin: 0 0 6px; font: 400 2.1rem/1.15 Georgia, "Times New Roman", serif; letter-spacing: .3px;
+  }
+  .topo h1 span { color: var(--ouro); }
+  .topo p { margin: 0; color: #c9cfdc; max-width: 600px; }
+  .topo .parceria { margin-top: 14px; font-size: .82rem; color: #9aa4ba; letter-spacing: .4px; text-transform: uppercase; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  .cartao {
+    background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio);
+    padding: 22px 20px; margin-bottom: 20px;
+  }
+  h2 { font: 400 1.45rem/1.25 Georgia, serif; margin: 0 0 14px; color: var(--marinho); }
+  fieldset { border: 0; margin: 0 0 22px; padding: 0; }
+  legend { font-weight: 650; margin-bottom: 4px; padding: 0; }
+  .ajuda { color: var(--suave); font-size: .9rem; margin: 0 0 10px; }
+  .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 420px; }
+  label.campo { display: flex; flex-direction: column; gap: 4px; font-size: .88rem; color: var(--suave); }
+  input[type=text], input[type=tel], input[type=email], input[type=date], input[inputmode] {
+    width: 100%; font: inherit; color: var(--tinta); background: #fff;
+    border: 1px solid #c7c0b3; border-radius: 9px; padding: 10px 12px; min-height: 46px;
+  }
+  input:focus-visible, button:focus-visible, a:focus-visible, .opcao:focus-within {
+    outline: 3px solid var(--ouro); outline-offset: 2px;
+  }
+  .data { max-width: 220px; }
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .opcao {
+    display: flex; gap: 10px; align-items: flex-start; cursor: pointer;
+    border: 1px solid #c7c0b3; border-radius: 10px; padding: 12px 14px; background: #fff;
+  }
+  .opcao:has(input:checked) { border-color: var(--marinho); background: #eef1f7; box-shadow: inset 0 0 0 1px var(--marinho); }
+  .opcao input { margin-top: 5px; accent-color: var(--marinho); width: 18px; height: 18px; flex: none; }
+  .opcao b { display: block; }
+  .opcao small { color: var(--suave); font-size: .85rem; line-height: 1.4; }
+  .extra { margin-top: 10px; }
+  .marcar { display: flex; gap: 10px; align-items: flex-start; font-size: .95rem; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; margin-top: 4px; accent-color: var(--marinho); flex: none; }
+  button, .botao {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font: 650 1rem/1 system-ui, sans-serif; border-radius: 10px; padding: 14px 24px; min-height: 50px;
+    border: 0; cursor: pointer; text-decoration: none;
+  }
+  .principal { background: var(--marinho); color: #fff; }
+  .principal:hover { background: #1f3159; }
+  .zap { background: var(--zap); color: #fff; font-size: 1.08rem; width: 100%; }
+  .zap:hover { filter: brightness(1.06); }
+  .zap svg { width: 22px; height: 22px; }
+  .erros { background: var(--erro-claro); color: var(--erro); border-radius: 10px; padding: 12px 16px; margin: 14px 0 0; }
+  .erros ul { margin: 0; padding-left: 20px; }
+  .resumo { display: flex; flex-wrap: wrap; gap: 6px 22px; color: var(--suave); font-size: .92rem; margin-bottom: 18px; }
+  .resumo b { color: var(--tinta); font-weight: 650; }
+  ol.linha { list-style: none; margin: 0; padding: 0; position: relative; }
+  ol.linha::before { content: ""; position: absolute; left: 11px; top: 8px; bottom: 8px; width: 2px; background: var(--linha); }
+  ol.linha li { position: relative; padding: 0 0 22px 40px; }
+  ol.linha li:last-child { padding-bottom: 0; }
+  ol.linha li::before {
+    content: ""; position: absolute; left: 4px; top: 6px; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--ouro);
+  }
+  ol.linha li.atingido::before { background: var(--ok); border-color: var(--ok); }
+  ol.linha li.vedado::before { background: #fff; border-color: #a7a7a7; }
+  .marco-topo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .marco-nome { font-weight: 650; }
+  .marco-data { font: 400 1.55rem/1.2 Georgia, serif; color: var(--marinho); }
+  .selo { font-size: .76rem; font-weight: 650; padding: 3px 9px; border-radius: 99px; letter-spacing: .3px; }
+  .selo.ok { background: var(--ok-claro); color: var(--ok); }
+  .selo.futuro { background: var(--ouro-claro); color: #7a5a22; }
+  .selo.cinza { background: #ececec; color: #555; }
+  .marco-texto { color: var(--suave); font-size: .93rem; margin: 4px 0 0; }
+  .marco-fund { font-size: .8rem; color: #8a8f99; margin-top: 2px; }
+  .cta { background: var(--ouro-claro); border: 1px solid #e3d1ae; border-radius: var(--raio); padding: 18px; margin: 22px 0 0; }
+  .cta p { margin: 0 0 12px; }
+  .obs { margin: 18px 0 0; padding-left: 20px; color: var(--suave); font-size: .9rem; }
+  .obs li { margin-bottom: 6px; }
+  .aviso { font-size: .88rem; border-left: 4px solid var(--ouro); background: #faf7f1; padding: 10px 14px; margin-top: 16px; border-radius: 0 8px 8px 0; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sucesso { background: var(--ok-claro); color: var(--ok); border-radius: 10px; padding: 14px 16px; font-weight: 600; }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; font-weight: 650; color: var(--marinho); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 12px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  th { color: var(--suave); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .4px; }
+  td.fracao { font-weight: 700; color: var(--marinho); white-space: nowrap; }
+  footer { color: var(--suave); font-size: .82rem; text-align: center; padding: 8px 16px 40px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 560px) {
+    .topo h1 { font-size: 1.75rem; }
+    .duas { grid-template-columns: 1fr; }
+    .cartao { padding: 18px 16px; }
+    .principal { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="faixa">
+    <h1>Calculadora <span>Penal</span></h1>
+    <p>Estime, de forma simples, quando a pessoa poderá pedir a progressão para o regime semiaberto,
+       para o regime aberto e o livramento condicional.</p>
+    <div class="parceria" id="parceria">Cespedes Lourenço Advogados · Instituto Mauá de Tecnologia</div>
+  </div>
+</header>
+
+<main>
+  <form id="form" class="cartao" novalidate>
+    <h2>Dados da condenação</h2>
+
+    <fieldset>
+      <legend>1. Pena total</legend>
+      <p class="ajuda">O tempo total fixado pelo juiz na sentença (ou a soma das penas, se houver mais de uma).</p>
+      <div class="trio">
+        <label class="campo">Anos <input name="pena_anos" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+        <label class="campo">Meses <input name="pena_meses" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+        <label class="campo">Dias <input name="pena_dias" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. Data de início da pena</legend>
+      <p class="ajuda">Quando começou o cumprimento da pena (normalmente a data da prisão).</p>
+      <label class="campo data">Data <input type="date" name="data_inicio" required></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. Tempo de detração <span style="font-weight:400;color:var(--suave)">(se houver)</span></legend>
+      <p class="ajuda">Tempo que a pessoa ficou presa <b>antes</b> dessa data e que é descontado da pena:
+        prisão preventiva, temporária ou internação provisória.</p>
+      <div class="trio">
+        <label class="campo">Anos <input name="detracao_anos" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+        <label class="campo">Meses <input name="detracao_meses" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+        <label class="campo">Dias <input name="detracao_dias" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. Tipo de crime</legend>
+      <div class="opcoes">
+        <label class="opcao"><input type="radio" name="tipo_crime" value="comum" checked>
+          <span><b>Crime comum</b><small>Não está na Lei dos Crimes Hediondos. Ex.: furto, estelionato, roubo.</small></span></label>
+        <label class="opcao"><input type="radio" name="tipo_crime" value="hediondo">
+          <span><b>Hediondo ou equiparado</b><small>Ex.: homicídio qualificado, latrocínio, estupro, tráfico de drogas.</small></span></label>
+      </div>
+      <div class="extra" id="extra-comum">
+        <label class="marcar"><input type="checkbox" name="violencia" value="true">
+          <span>O crime foi cometido <b>com violência ou grave ameaça</b> à pessoa (ex.: roubo).</span></label>
+      </div>
+      <div class="extra" id="extra-hediondo" hidden>
+        <label class="marcar"><input type="checkbox" name="resultado_morte" value="true">
+          <span>O crime teve <b>resultado morte</b> (ex.: latrocínio, homicídio qualificado).</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>5. Situação da pessoa</legend>
+      <div class="opcoes">
+        <label class="opcao"><input type="radio" name="status" value="primario" checked>
+          <span><b>Primário</b><small>Nunca tinha sido condenado definitivamente antes.</small></span></label>
+        <label class="opcao"><input type="radio" name="status" value="reincidente">
+          <span><b>Reincidente</b><small>Cometeu este crime depois de uma condenação definitiva anterior.</small></span></label>
+      </div>
+      <div class="extra" id="extra-especifica" hidden>
+        <label class="marcar"><input type="checkbox" name="reincidencia_especifica" value="true">
+          <span>A condenação anterior <b>também foi por crime hediondo</b> ou equiparado.</span></label>
+      </div>
+    </fieldset>
+
+    <button class="principal" type="submit">Calcular datas</button>
+    <div class="erros" id="erros" role="alert" hidden></div>
+  </form>
+
+  <section id="resultado" class="cartao" hidden aria-live="polite">
+    <h2>Resultado estimado</h2>
+    <div class="resumo" id="resumo"></div>
+    <ol class="linha" id="linha"></ol>
+
+    <div class="cta">
+      <p><b>Ficou com dúvida ou quer conferir o caso?</b><br>
+        Um advogado especialista em execução penal pode analisar o processo e verificar os benefícios.</p>
+      <a class="botao zap" id="zap" href="#" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.7-.3-1.4-.7-2-1.3-.6-.5-1-1.1-1.4-1.7-.1-.2 0-.4.1-.5l.4-.5.3-.5v-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.6.6-.9 1.4-.9 2.2.1 1 .4 1.9 1 2.7 1.1 1.6 2.5 2.9 4.3 3.7.5.2.9.4 1.4.5.5.2 1 .2 1.6.1.6-.1 1.2-.5 1.6-1 .2-.4.2-.8.1-1.2 0-.1-.2-.2-.4-.3Z"/></svg>
+        Quero falar com um advogado
+      </a>
+    </div>
+
+    <ul class="obs" id="observacoes"></ul>
+    <p class="aviso" id="aviso"></p>
+  </section>
+
+  <section id="contato" class="cartao" hidden>
+    <h2>Prefere que o escritório entre em contato?</h2>
+    <p class="ajuda">Deixe seu nome e WhatsApp. Os dados são usados só para este atendimento.</p>
+    <form id="form-contato" novalidate>
+      <div class="duas">
+        <label class="campo">Nome completo *<input type="text" name="nome" autocomplete="name" maxlength="120" required></label>
+        <label class="campo">WhatsApp com DDD *<input type="tel" name="whatsapp" autocomplete="tel" placeholder="(11) 98765-4321" maxlength="25" required></label>
+        <label class="campo">E-mail (opcional)<input type="email" name="email" autocomplete="email" maxlength="254"></label>
+        <label class="campo">Número do processo (opcional)<input type="text" name="processo" placeholder="NNNNNNN-DD.AAAA.J.TR.OOOO" maxlength="30" autocomplete="off"></label>
+      </div>
+      <p style="margin:16px 0">
+        <label class="marcar"><input type="checkbox" name="consentimento" value="true" required>
+          <span>Autorizo o escritório a usar estes dados para entrar em contato comigo sobre este caso (LGPD).</span></label>
+      </p>
+      <button class="principal" type="submit">Enviar meus dados</button>
+      <div class="erros" id="erros-contato" role="alert" hidden></div>
+    </form>
+    <div class="sucesso" id="sucesso-contato" role="status" hidden></div>
+  </section>
+
+  <section class="cartao">
+    <details id="regras">
+      <summary>Como o cálculo é feito?</summary>
+      <p class="ajuda" style="margin-top:12px">A pessoa começa no regime fechado. Depois de cumprir uma parte da pena,
+        pode pedir o semiaberto; depois de cumprir a mesma porcentagem do que faltava, pode pedir o aberto.
+        O livramento condicional é contado sobre a pena total. As porcentagens seguem o art. 112 da Lei de Execução Penal,
+        alterado pelo Pacote Anticrime (Lei 13.964/2019), e o art. 83 do Código Penal.</p>
+      <table id="tabela-progressao"><thead><tr><th>Progressão</th><th>Quando se aplica</th></tr></thead><tbody></tbody></table>
+      <table id="tabela-livramento"><thead><tr><th>Livramento</th><th>Quando se aplica</th></tr></thead><tbody></tbody></table>
+    </details>
+  </section>
+</main>
+
+<footer>Projeto de extensão · Desenvolvimento de Aplicativos com a Linguagem Kotlin · Instituto Mauá de Tecnologia</footer>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const form = $('#form');
+  let whatsapp = '5511989498044';
+  let ultimoResumo = '';
+
+  // ---------- utilidades (texto sempre via textContent: nada de innerHTML com dados) ----------
+  const el = (tag, attrs = {}, ...filhos) => {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    for (const f of filhos) if (f != null) e.append(f);
+    return e;
+  };
+  const dataBr = (iso) => { const [a, m, d] = iso.split('-'); return `${d}/${m}/${a}`; };
+  const hojeIso = () => {
+    const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  };
+  const diasAte = (iso) => Math.round((Date.parse(iso) - Date.parse(hojeIso())) / 86400000);
+  const mostrarErros = (alvo, lista) => {
+    alvo.replaceChildren(el('ul', {}, ...lista.map((m) => el('li', {}, m))));
+    alvo.hidden = false;
+  };
+
+  // ---------- campos que aparecem conforme as escolhas ----------
+  const atualizarExtras = () => {
+    const tipo = form.tipo_crime.value, status = form.status.value;
+    $('#extra-comum').hidden = tipo !== 'comum';
+    $('#extra-hediondo').hidden = tipo !== 'hediondo';
+    $('#extra-especifica').hidden = !(tipo === 'hediondo' && status === 'reincidente');
+  };
+  form.addEventListener('change', atualizarExtras);
+  atualizarExtras();
+
+  // ---------- dados públicos do escritório e tabela de regras ----------
+  fetch('/api/config').then((r) => r.json()).then((c) => {
+    whatsapp = c.whatsapp || whatsapp;
+    if (c.escritorio) $('#parceria').textContent = `${c.escritorio} · Instituto Mauá de Tecnologia`;
+    atualizarZap();
+  }).catch(() => {});
+
+  $('#regras').addEventListener('toggle', function carregar() {
+    $('#regras').removeEventListener('toggle', carregar);
+    fetch('/api/regras').then((r) => r.json()).then((r) => {
+      const linha = (x) => el('tr', {}, el('td', { class: 'fracao' }, x.fracao),
+        el('td', {}, x.descricao, el('div', { class: 'marco-fund' }, x.fundamento)));
+      $('#tabela-progressao tbody').replaceChildren(...r.progressao.map(linha));
+      $('#tabela-livramento tbody').replaceChildren(...r.livramento_condicional.map(linha));
+    }).catch(() => {});
+  });
+
+  const atualizarZap = () => {
+    const texto = 'Olá! Usei a Calculadora Penal e gostaria de falar com um advogado.' +
+      (ultimoResumo ? `\n\n${ultimoResumo}` : '');
+    $('#zap').href = `https://wa.me/${encodeURIComponent(whatsapp)}?text=${encodeURIComponent(texto)}`;
+  };
+
+  // ---------- cálculo ----------
+  const marco = (nome, m, opcoes = {}) => {
+    if (opcoes.vedado) {
+      return el('li', { class: 'vedado' },
+        el('div', { class: 'marco-topo' }, el('span', { class: 'marco-nome' }, nome),
+          el('span', { class: 'selo cinza' }, 'Não cabível')),
+        el('p', { class: 'marco-texto' }, m.motivo),
+        el('div', { class: 'marco-fund' }, m.fundamento));
+    }
+    const dias = diasAte(m.data);
+    const selo = opcoes.semSelo ? null : m.ja_atingido
+      ? el('span', { class: 'selo ok' }, 'Tempo já atingido')
+      : el('span', { class: 'selo futuro' }, dias === 1 ? 'Falta 1 dia' : `Faltam ${dias} dias`);
+    return el('li', { class: m.ja_atingido ? 'atingido' : '' },
+      el('div', { class: 'marco-topo' }, el('span', { class: 'marco-nome' }, nome), selo),
+      el('div', { class: 'marco-data' }, dataBr(m.data)),
+      m.explicacao ? el('p', { class: 'marco-texto' }, m.explicacao) : null,
+      m.fundamento ? el('div', { class: 'marco-fund' }, `Fração: ${m.fracao} · ${m.fundamento}`) : null);
+  };
+
+  const exibir = (r) => {
+    $('#resumo').replaceChildren(
+      el('span', {}, 'Pena: ', el('b', {}, r.pena_total.texto)),
+      el('span', {}, 'Detração: ', el('b', {}, r.detracao.texto)),
+      el('span', {}, 'A cumprir: ', el('b', {}, r.pena_restante.texto)),
+      el('span', {}, 'Perfil: ', el('b', {}, r.entrada.perfil)));
+
+    const lc = r.livramento_condicional;
+    // Benefícios em ordem de data (o livramento pode vir antes do aberto); "não cabível" vai por último.
+    const beneficios = [
+      { data: r.regime_semiaberto.data, li: marco('Regime semiaberto', r.regime_semiaberto) },
+      { data: r.regime_aberto.data, li: marco('Regime aberto', r.regime_aberto) },
+      { data: lc.cabivel ? lc.data : '9999-12-31',
+        li: marco('Livramento condicional', lc, { vedado: !lc.cabivel }) },
+    ].sort((a, b) => a.data.localeCompare(b.data));
+    $('#linha').replaceChildren(
+      marco('Início da contagem', { data: r.data_base, ja_atingido: true,
+        explicacao: r.detracao.total_dias > 0 ? 'Data de início recuada pelo tempo de detração.' : 'Data de início da pena.' },
+        { semSelo: true }),
+      ...beneficios.map((b) => b.li),
+      marco(r.termino_pena.limitado_a_40_anos ? 'Fim do cumprimento (limite de 40 anos)' : 'Término da pena',
+        { data: r.termino_pena.data, ja_atingido: diasAte(r.termino_pena.data) <= 0 }));
+
+    $('#observacoes').replaceChildren(...r.observacoes.map((o) => el('li', {}, o)));
+    $('#aviso').textContent = r.aviso;
+
+    ultimoResumo = [
+      `Pena: ${r.pena_total.texto} (início ${dataBr(r.entrada.data_inicio)}), detração: ${r.detracao.texto}`,
+      `Perfil: ${r.entrada.perfil}`,
+      `Semiaberto: ${dataBr(r.regime_semiaberto.data)} · Aberto: ${dataBr(r.regime_aberto.data)}`,
+      `Livramento: ${lc.cabivel ? dataBr(lc.data) : 'não cabível'}`,
+    ].join('\n');
+    atualizarZap();
+
+    $('#resultado').hidden = false;
+    $('#contato').hidden = false;
+    $('#resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    $('#erros').hidden = true;
+    const params = new URLSearchParams();
+    for (const [k, v] of new FormData(form)) if (String(v).trim() !== '') params.append(k, String(v).trim());
+    try {
+      const resp = await fetch(`/api/calculo?${params}`);
+      const dados = await resp.json();
+      if (!resp.ok) { mostrarErros($('#erros'), dados.detalhes || [dados.erro || 'Não foi possível calcular.']); return; }
+      exibir(dados);
+    } catch {
+      mostrarErros($('#erros'), ['Não foi possível falar com o servidor. Tente novamente.']);
+    }
+  });
+
+  // ---------- captação de contato ----------
+  $('#form-contato').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    $('#erros-contato').hidden = true;
+    const corpo = new URLSearchParams(new FormData(f));
+    corpo.set('resumo', ultimoResumo.replace(/\n/g, ' | '));
+    try {
+      const resp = await fetch('/api/contatos', { method: 'POST', body: corpo });
+      const dados = await resp.json();
+      if (!resp.ok) { mostrarErros($('#erros-contato'), dados.detalhes || [dados.erro]); return; }
+      f.hidden = true;
+      $('#sucesso-contato').textContent = dados.mensagem;
+      $('#sucesso-contato').hidden = false;
+    } catch {
+      mostrarErros($('#erros-contato'), ['Não foi possível enviar agora. Use o botão do WhatsApp acima.']);
+    }
+  });
+})();
+</script>
+</body>
+</html>
