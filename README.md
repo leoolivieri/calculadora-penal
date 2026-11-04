@@ -9,7 +9,7 @@ Empresa parceira: **Cespedes Lourenço Advogados**
 ## 1. Componentes do grupo
 
 | Nome |
-|---|---|
+
 | Leonardo Souza Olivieri | |
 
 ---
